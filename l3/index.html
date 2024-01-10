@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>l-3 - My Docs</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">l-4</a>
+                            </li>
+                            <li class="navitem active">
+                                <a href="./" class="nav-link">l-3</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#django" class="nav-link">Реализация простого сайта средствами Django</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#_1" class="nav-link">Текст работы</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_2" class="nav-link">Модели</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#urlspy" class="nav-link">Маршруты приложения urls.py</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#serializerspy" class="nav-link">serializers.py</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_3" class="nav-link">Контроллеры приложения</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#api" class="nav-link">Обзор API</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_4" class="nav-link">Заключение</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="django">Реализация простого сайта средствами Django</h1>
+<p>Цель: овладеть практическими навыками реализации серверной части (backend) приложений средствами Django REST framework.</p>
+<h2 id="_1">Текст работы</h2>
+<p>Музыкальный плеер</p>
+<h2 id="_2">Модели</h2>
+<pre><code class="language-python">class User(models.Model):
+    email = models.EmailField(max_length=255, blank=False, null=False, unique=True)
+    password = models.CharField(max_length=255, blank=False, null=False)
+
+    @property
+    def favorite_playlist(self):
+        return self.playlists.first()
+
+    #  profile
+    #  api_tokens
+    #  playlists
+
+
+class UserProfile(models.Model):
+    first_name = models.CharField(max_length=255, blank=False, null=False)
+    last_name = models.CharField(max_length=255, blank=False, null=False)
+    patronymic = models.CharField(max_length=255, blank=True, null=True)
+
+    user = models.OneToOneField('User', on_delete=models.CASCADE, related_name='profile')
+
+
+class ApiToken(models.Model):
+    token = models.CharField(max_length=255, blank=False, null=False, unique=True)
+
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='api_tokens')
+
+###################
+
+
+class FileType(models.TextChoices):
+    AUDIO = 'audio', 'audio'
+    VIDEO = 'video', 'video'
+    IMAGE = 'image', 'image'
+
+
+class DefaultFilePath(models.TextChoices):
+    FAVORITE_PLAYLIST_COVER = 'storage/default_playlist_cover.jpg', 'storage/default_playlist_cover.jpg'
+
+
+class File(models.Model):
+    file = models.FileField(upload_to='storage/')
+    type = models.CharField(
+        max_length=5,
+        choices=FileType.choices
+    )
+
+    @property
+    def filename(self):
+        return str(self.file).split('storage/')[1]
+
+    # path = models.CharField(max_length=255)
+    # extension = models.CharField(max_length=255)
+
+
+class Artist(models.Model):
+    name = models.CharField(max_length=255)
+    avatar = models.ForeignKey(File, on_delete=models.SET_NULL, null=True, related_name='+')
+
+    #  songs
+    #  albums
+
+
+class Song(models.Model):
+    artist = models.ForeignKey(Artist, on_delete=models.RESTRICT, null=True, related_name='songs')
+    audio = models.ForeignKey(File, on_delete=models.RESTRICT, null=False, related_name='+')
+    cover = models.ForeignKey(File, on_delete=models.SET_NULL, null=True, related_name='+')
+    name = models.CharField(max_length=255)
+
+    @property
+    def cover_url(self):
+        return settings.APP_URL + reverse('image.download', kwargs={'filename': self.cover.filename})
+
+    @property
+    def audio_url(self):
+        return settings.APP_URL + reverse('audio.download', kwargs={'filename': self.audio.filename})
+
+
+class Playlist(models.Model):
+    name = models.CharField(max_length=255)
+    cover = models.ForeignKey(File, on_delete=models.SET_NULL, null=True, related_name='+')
+    is_public = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='playlists')
+
+    songs = models.ManyToManyField(Song)
+
+    @property
+    def cover_url(self):
+        return settings.APP_URL + reverse('image.download', kwargs={'filename': self.cover.filename})
+
+    @staticmethod
+    def create_favorite_playlist_for_user(user):
+        cover = File.objects.filter(file=DefaultFilePath.FAVORITE_PLAYLIST_COVER).get()
+        playlist = Playlist(
+            name='Favorite',
+            cover=cover,
+            is_public=False,
+            user=user
+        )
+        playlist.save()
+
+
+class Album(models.Model):
+    name = models.CharField(max_length=100)
+    cover = models.ForeignKey(File, on_delete=models.SET_NULL, null=True, related_name='+')
+    artist = models.ForeignKey(Artist, on_delete=models.RESTRICT)
+
+    songs = models.ManyToManyField(Song)
+
+</code></pre>
+<p>Были созданы модели Пользователя и Токена для авторизации. Так же модели Файл, Тип файла, Исполнитель,
+Песня, Плейлист, Альбом.</p>
+<h2 id="urlspy">Маршруты приложения <code>urls.py</code></h2>
+<pre><code class="language-python">from django.urls import path
+from musec_app.views import auth
+from musec_app.views import user
+from musec_app.views import songs
+from musec_app.views import files
+from musec_app.views import playlists
+
+
+urlpatterns = [
+    #  Auth
+    path('register', auth.register, name='auth.register'),
+    path('login', auth.login, name='auth.login'),
+    path('logout', auth.logout, name='auth.logout'),
+
+    #  User
+    path('me', user.me, name='user.me'),
+
+    #  Songs
+    path('songs', songs.index, name='songs.index'),
+    path('songs/&lt;int:song_id&gt;/favorite', songs.toggle_favorite, name='songs.favorite'),
+    path('songs/upload', songs.store, name='songs.store'),  # test
+
+    #  Playlists
+    path('playlists', playlists.index, name='playlists.index'),
+    path('playlists/my', playlists.my, name='playlists.my'),
+
+    #  Files
+    path('files/audio/&lt;str:filename&gt;', files.download_audio, name='audio.download'),
+    path('files/image/&lt;str:filename&gt;', files.download_image, name='image.download'),
+]
+
+</code></pre>
+<p>Маршруты разбиты по логическим группам: маршруты для аутентификации, маршруты для работы с песнями,
+плейлистами и файлами.</p>
+<h2 id="serializerspy"><code>serializers.py</code></h2>
+<p>Был реализован API с помощью Django serializers для валидации http-запросов и форматирования http-ответов</p>
+<pre><code class="language-python">from rest_framework import serializers
+from musec_app.models import File, Song
+
+
+class ProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='id', read_only=True)
+    first_name = serializers.CharField(max_length=255)
+    last_name = serializers.CharField(max_length=255)
+    patronymic = serializers.CharField(max_length=255)
+
+
+class UserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='id', read_only=True)
+    email = serializers.EmailField(max_length=255)
+    password = serializers.CharField(max_length=255, write_only=True)
+
+    first_name = serializers.CharField(max_length=255, write_only=True)
+    last_name = serializers.CharField(max_length=255, write_only=True)
+    patronymic = serializers.CharField(max_length=255, write_only=True, allow_blank=True, allow_null=True)
+
+    profile = ProfileSerializer(read_only=True)
+
+
+class UserAuthSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='id', read_only=True)
+    email = serializers.EmailField(max_length=255)
+    password = serializers.CharField(max_length=255, write_only=True)
+
+
+class TokenSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+
+class ArtistSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='id', read_only=True)
+    name = serializers.CharField(max_length=255)
+    # avatar_url = serializers.CharField(max_length=255)
+
+
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+        fields = ['id', 'file']
+
+
+class SongSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='id', read_only=True)
+    cover_url = serializers.ReadOnlyField()
+    audio_url = serializers.ReadOnlyField()
+    artist = ArtistSerializer(read_only=True)
+
+    name = serializers.CharField(max_length=255)
+
+    artist_id = serializers.IntegerField(write_only=True)
+    audio = serializers.FileField(write_only=True)
+    cover = serializers.FileField(write_only=True)
+
+
+class PlaylistSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='id', read_only=True)
+    name = serializers.CharField(max_length=255)
+    cover_url = serializers.ReadOnlyField()
+
+    songs = SongSerializer(read_only=True, many=True)
+
+</code></pre>
+<h2 id="_3">Контроллеры приложения</h2>
+<p><code>songs.py</code> </p>
+<pre><code class="language-python">from django.utils.datastructures import MultiValueDictKeyError
+from rest_framework.decorators import api_view, authentication_classes, parser_classes
+from rest_framework.parsers import MultiPartParser
+from musec_app.auth.authentication import AppTokenAuthentication
+from musec_app.responses import api_response
+from musec_app.serializers import UserSerializer, SongSerializer, FileSerializer
+from musec_app.models import Song, File, FileType
+
+
+@api_view(['GET'])
+@authentication_classes([AppTokenAuthentication])
+def index(request):
+    filters = {}
+    try:
+        filters['name__icontains'] = request.GET['search']
+    except MultiValueDictKeyError:
+        pass
+    songs = Song.objects.filter(**filters).all()
+    return api_response.payload(SongSerializer(songs, many=True).data)
+
+
+@api_view(['POST'])
+@authentication_classes([AppTokenAuthentication])
+@parser_classes([MultiPartParser])
+def store(request):
+    serializer = SongSerializer(data=request.data)
+    if not serializer.is_valid():
+        return api_response.validation_error(serializer.errors)
+    data = serializer.validated_data
+
+    audio = File(
+        file=data['audio'],
+        type=FileType.AUDIO
+    )
+    audio.save()
+
+    cover = File(
+        file=data['cover'],
+        type=FileType.IMAGE
+    )
+    cover.save()
+
+    song_data = {
+        'name': data['name'],
+        'artist_id': data['artist_id'],
+        'audio': audio,
+        'cover': cover,
+    }
+
+    song = Song(**song_data)
+    song.save()
+
+    return api_response.success('Song successfully created')
+
+
+@api_view(['POST'])
+@authentication_classes([AppTokenAuthentication])
+def toggle_favorite(request, song_id):
+    song = Song.objects.filter(id=song_id).get()
+    if not song:
+        return api_response.not_found('Song was not found.')
+
+    favorite_playlist = request.user.favorite_playlist
+
+    if favorite_playlist.songs.filter(id=song_id).all().first():
+        #  already liked
+        favorite_playlist.songs.remove(song)
+    else:
+        favorite_playlist.songs.add(song)
+
+    return api_response.success()
+
+</code></pre>
+<p><code>playlists.py</code> </p>
+<pre><code class="language-python">from rest_framework.decorators import api_view, authentication_classes
+from musec_app.auth.authentication import AppTokenAuthentication
+from musec_app.responses import api_response
+from musec_app.serializers import PlaylistSerializer
+from musec_app.models import Playlist
+from django.utils.datastructures import MultiValueDictKeyError
+
+
+@api_view(['GET'])
+@authentication_classes([AppTokenAuthentication])
+def my(request):
+    playlists = Playlist.objects.filter(user_id=request.user.id, is_public=False).all()
+    return api_response.payload(PlaylistSerializer(playlists, many=True).data)
+
+
+@api_view(['GET'])
+@authentication_classes([AppTokenAuthentication])
+def index(request):
+    filters = {
+        'user_id': None,
+        'is_public': True,
+    }
+    try:
+        filters['name__icontains'] = request.GET['search']
+    except MultiValueDictKeyError:
+        pass
+
+    playlists = Playlist.objects.filter(**filters).all()
+
+    return api_response.payload(PlaylistSerializer(playlists, many=True).data)
+
+
+</code></pre>
+<p><code>files.py</code> </p>
+<pre><code class="language-python">from rest_framework.decorators import api_view
+from musec_app.models import File
+from musec_app.responses import api_response
+import os
+from django.http import HttpResponse
+from django.conf import settings
+
+
+@api_view(['GET'])
+def download_audio(_, filename):
+    return get_response('audio/mpeg', filename)
+
+
+@api_view(['GET'])
+def download_image(_, filename):
+    return get_response('image/png', filename)
+
+
+def get_response(content_type, filename):
+    filename = 'storage/' + filename
+    file = File.objects.filter(file=filename).all().first()
+    if not file:
+        return api_response.not_found()
+
+    full_path = os.path.join(settings.MEDIA_ROOT, filename)
+
+    with open(full_path, 'rb') as fh:
+        response = HttpResponse(fh.read(), content_type=content_type)
+        response['Content-Disposition'] = 'inline; filename=' + os.path.basename(full_path)
+        return response
+
+</code></pre>
+<p><code>user.py</code> </p>
+<pre><code class="language-python">
+from rest_framework.decorators import api_view, authentication_classes
+from musec_app.auth.authentication import AppTokenAuthentication
+from musec_app.responses import api_response
+from musec_app.serializers import UserSerializer
+
+
+@api_view(['GET'])
+@authentication_classes([AppTokenAuthentication])
+def me(request):
+    return api_response.payload(UserSerializer(request.user, context={'profile': True}).data)
+
+</code></pre>
+<p><code>auth.py</code> </p>
+<pre><code class="language-python">import string
+import random
+
+from rest_framework.decorators import api_view, authentication_classes
+from musec_app.serializers import UserSerializer, UserAuthSerializer, TokenSerializer
+from musec_app.models import User, ApiToken, UserProfile, Playlist
+from musec_app.responses import api_response
+from musec_app.auth.authentication import AppTokenAuthentication
+from django.contrib.auth.hashers import PBKDF2SHA1PasswordHasher as PasswordHasher
+
+
+@api_view(['POST'])
+def register(request):
+    serializer = UserSerializer(data=request.data)
+    if not serializer.is_valid():
+        return api_response.validation_error(serializer.errors)
+
+    data = serializer.validated_data
+
+    if User.objects.filter(email=data['email']).count() &gt; 0:
+        return api_response.error('The user with given email is already registered', 422)
+
+    hasher = PasswordHasher()
+
+    user = User.objects.create(email=data['email'], password=hasher.encode(data['password'], hasher.salt()))
+    user.save()
+
+    profile = UserProfile(
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        patronymic=data['patronymic'],
+        user=user
+    )
+    profile.save()
+
+    Playlist.create_favorite_playlist_for_user(user)
+
+    return api_response.payload(UserSerializer(user).data)
+
+
+@api_view(['POST'])
+def login(request):
+    serializer = UserAuthSerializer(data=request.data)
+    if not serializer.is_valid():
+        return api_response.validation_error(serializer.errors)
+
+    email = serializer.validated_data['email']
+    password = serializer.validated_data['password']
+
+    user = User.objects.filter(email=email).first()
+
+    if not user:
+        return api_response.not_found('User not found')
+
+    hasher = PasswordHasher()
+    if not hasher.verify(password, user.password):
+        return api_response.unauthenticated()
+
+    source = string.ascii_letters + string.digits
+    token = ''.join((random.choice(source) for _ in range(128)))
+
+    api_token = ApiToken(token=token, user=user)
+    api_token.save()
+
+    response = api_response.payload(TokenSerializer({'token': token}).data)
+    response.set_cookie(
+        key='api_token',
+        value=token,
+        httponly=True
+    )
+
+    return response
+
+
+@api_view(['POST'])
+@authentication_classes([AppTokenAuthentication])
+def logout(request):
+    request.auth.delete()
+
+    return api_response.success('Successfully logged out.')
+
+</code></pre>
+<p><code>api_response.py</code></p>
+<pre><code class="language-python">from django.http import JsonResponse
+
+
+def success(message='Success'):
+    return JsonResponse(
+        data=format_payload(message),
+        status=200
+    )
+
+
+def payload(data):
+    return JsonResponse(
+        data=format_payload(data=data),
+        status=200
+    )
+
+
+#  Errors
+def unauthenticated():
+    return JsonResponse(
+        data=format_payload('Invalid credentials'),
+        status=401
+    )
+
+
+def validation_error(errors, message='Validation error'):
+    return JsonResponse(
+        data=format_payload(message, None, errors),
+        status=422
+    )
+
+
+def not_found(message='Not found'):
+    return JsonResponse(
+        data=format_payload(message),
+        status=404,
+    )
+
+
+def error(message='Error', status=400):
+    return JsonResponse(
+        data=format_payload(message),
+        status=status
+    )
+
+
+#  Internal
+def format_payload(message=None, data=None, errors=None):
+    return {
+        'message': message,
+        'data': data if data else [],
+        'errors': errors if errors else [],
+    }
+
+</code></pre>
+<p><code>authentication.py</code></p>
+<pre><code class="language-python">from rest_framework.authentication import BaseAuthentication, get_authorization_header
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework import exceptions
+from musec_app.models import User, ApiToken
+
+
+class AppTokenAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        try:
+            token = request.COOKIES['api_token']
+            api_token = ApiToken.objects.filter(token=token).get()
+        except KeyError:
+            raise exceptions.AuthenticationFailed('Unauthenticated')
+        except ObjectDoesNotExist:
+            raise exceptions.AuthenticationFailed('Unauthenticated')
+
+        return api_token.user, api_token
+
+    def authenticate_header(self, request):
+        return 'Token'
+
+</code></pre>
+<h2 id="api">Обзор API</h2>
+<h3 id="auth">AUTH</h3>
+<p><code>POST /register</code>
+<img alt="" src="../pictures/register1.png" />
+<code>POST /login</code>
+<img alt="" src="../pictures/login1.png" />
+<code>POST /logout</code>
+<img alt="" src="../pictures/logout.png" /></p>
+<h3 id="user">User</h3>
+<p><code>GET /me</code>
+<img alt="" src="../pictures/me.png" /></p>
+<h3 id="songs">Songs</h3>
+<p><code>GET /songs</code>
+<img alt="" src="../pictures/index%20songs.png" />
+<code>POST /songs/&lt;id&gt;/favorite</code>
+<img alt="" src="../pictures/toggle%20favorite.png" />
+<code>POST /songs/upload</code>
+<img alt="" src="../pictures/song_store.png" /></p>
+<h3 id="filesaudio">Files/Audio</h3>
+<p><code>GET /files/audio/&lt;path&gt;</code>
+<img alt="" src="../pictures/audio_download.png" /></p>
+<h3 id="filesimage">Files/Image</h3>
+<p><code>GET /files/image/&lt;path&gt;</code>
+<img alt="" src="../pictures/image_download.png" /></p>
+<h3 id="playlists">Playlists</h3>
+<p><code>GET /playlists/my</code>
+<img alt="" src="../pictures/playlists_my.png" />
+<code>GET /playlists?search=q</code>
+<img alt="" src="../pictures/playlists_index.png" /></p>
+<h2 id="_4">Заключение</h2>
+<p>В процессе лабораторной работы был создан API приложения для поиска и прослушиваня аудиодорожек,
+с возможностью регистрации, добавления дорожек в понравившиеся, составления плейлистов</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/jquery-3.6.0.min.js"></script>
+        <script src="../js/bootstrap.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
