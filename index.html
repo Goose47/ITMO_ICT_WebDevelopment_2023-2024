@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>My Docs</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">My Docs</a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#vuejs" class="nav-link">Реализация сайта средствами Vue.js</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#_1" class="nav-link">Текст работы</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_2" class="nav-link">Ход работы</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_3" class="nav-link">Скриншоты страниц приложения</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_4" class="nav-link">Заключение</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="vuejs">Реализация сайта средствами Vue.js</h1>
+<p>Цель: Реализация клиентской части приложения средствами vue.js</p>
+<h2 id="_1">Текст работы</h2>
+<p>Музыкальный плеер</p>
+<h2 id="_2">Ход работы</h2>
+<p>В работе использовался vue-router для маршрутизации:
+<code>@/router/routes.js</code></p>
+<pre><code class="language-javascript">import HomePage from &quot;../views/HomePage.vue&quot;;
+import ProfilePage from &quot;../views/ProfilePage.vue&quot;;
+import SearchPage from &quot;../views/SearchPage.vue&quot;;
+
+import LoginPage from &quot;../views/auth/LoginPage.vue&quot;;
+import RegisterPage from &quot;../views/auth/RegisterPage.vue&quot;;
+
+import NotFoundPage from &quot;../views/NotFoundPage.vue&quot;;
+
+import SecureComponent from &quot;../components/SecureComponent.vue&quot;;
+import PublicComponent from &quot;../components/PublicComponent.vue&quot;;
+
+export default [
+    {
+        path: '',
+        meta: { requiresAuth: true },
+        component: SecureComponent,
+        children: [
+            {
+                path: '',
+                name: 'home',
+                component: HomePage
+            },
+            {
+                path: '/profile',
+                name: 'profile',
+                component: ProfilePage
+            },
+            {
+                path: '/search',
+                name: 'search',
+                component: SearchPage
+            },
+        ],
+    },
+    {
+        path: '',
+        meta: { blockedForAuthenticated: true },
+        component: PublicComponent,
+        children: [
+            {
+                path: '/login',
+                name: 'login',
+                component: LoginPage,
+            },
+            {
+                path: '/register',
+                name: 'register',
+                component: RegisterPage,
+            },
+        ],
+    },
+    {
+        name: '404',
+        path: '/:catchAll(.*)',
+        component: NotFoundPage
+    }
+]
+</code></pre>
+<p><code>@/router/index.js</code></p>
+<pre><code class="language-javascript">import { createRouter, createWebHistory } from 'vue-router'
+import routes from './routes.js'
+import useAuthStore from &quot;../pinia/auth&quot;;
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: routes,
+})
+
+router.beforeEach(async (to, from) =&gt; {
+  let user
+  let authStore = useAuthStore()
+
+  user = await authStore.getUser()
+
+  if(to.meta.requiresAuth &amp;&amp; !user) {
+    return {
+      name: 'login'
+    }
+  }
+  if(to.meta.blockedForAuthenticated &amp;&amp; user) {
+    return {
+      name: 'home'
+    }
+  }
+})
+
+export default router
+</code></pre>
+<p>Перед рендером страницы роутер проверяет, аутентифицирован ли
+пользователь, и разрешает или блокирует доступ к защищенным страницам
+соответственно.</p>
+<p>В качестве менеджера состояния используется pinia. Всего в приложении два
+store’a для работы с проигрываемыми треками и аутентификацией
+пользователя
+<code>@/pinia/auth.js</code></p>
+<pre><code class="language-javascript">import { defineStore } from 'pinia'
+import router from &quot;../router&quot;;
+import http from &quot;../services/httpClient&quot;;
+
+const useAuthStore = defineStore('auth', {
+  state: () =&gt; ({
+    user: null,
+  }),
+  getters: {
+    isAuthenticated() {
+      return this.user !== null
+    },
+  },
+  actions: {
+    setUser(user) {
+      this.user = user
+    },
+    register(user) {
+      http.post(
+        'register',
+        {...user},
+        ).then(res =&gt; {
+          router.push({name: 'login'})
+      }).catch(e =&gt; {
+        //
+      })
+    },
+    login(user) {
+      http.post(
+        'login',
+        {...user}
+      ).then(res =&gt; {
+        router.push({name: 'home'})
+      }).catch(err =&gt; {
+        //
+      })
+    },
+    logout() {
+      http.post(
+        'logout',
+      ).then(res =&gt; {
+        this.$reset()
+        router.push({name: 'login'})
+      })
+    },
+    async getUser() {
+      if (!this.user) {
+        let user
+        try {
+          user = (await http.get('me')).data
+        } catch (e) {
+          user = null
+        }
+
+        this.user = user
+      }
+
+      return this.user
+    },
+  },
+  persist: true,
+})
+
+export default useAuthStore
+</code></pre>
+<p><code>@/pinia/player.js</code></p>
+<pre><code class="language-javascript">import { defineStore } from 'pinia'
+
+const usePlayerStore = defineStore('player', {
+  state: () =&gt; ({
+    currentSong: null,
+    playlist: [],
+  }),
+  getters: {
+    getCurrentSong() {
+      return this.playlist[this.currentSong]
+    },
+  },
+  actions: {
+    setCurrentSong(song) {
+      this.playlist = [song]
+
+      this.currentSong = 0
+    },
+    addToPlaylist(song) {
+      this.playlist.push(song)
+    },
+
+    setCurrentPlaylist(playlist, play = true) {
+      this.playlist = playlist
+
+      if (play) {
+        this.currentSong = 0
+      }
+    },
+
+    playNextSong() {
+      if (this.playlist.length &gt; this.currentSong + 1) {
+        this.currentSong += 1
+      }
+    },
+    playPreviousSong() {
+      if (this.currentSong &gt; 0) {
+        this.currentSong -= 1
+      }
+    },
+  },
+  persist: true,
+})
+
+export default usePlayerStore
+</code></pre>
+<p>Для сохранения состояния используется библиотека pinia-plugin-persistedstate.
+Сохранение состояние позволяет сохранять сессию аутентификации и
+проигрываемый плейлист после перезагрузки страницы.</p>
+<p>Для обращения к api использовался axios:
+<code>@/services/httpClient.js</code></p>
+<pre><code class="language-javascript">import axios from &quot;axios&quot;
+
+
+class HttpClient {
+  get(
+    url,
+    params
+  ) {
+    return new Promise((resolve, reject) =&gt; {
+      axios.get(url, {params: params}).then(res =&gt; {
+        resolve(res.data)
+      }).catch(e =&gt; {
+        reject(e) 
+      })
+    })
+  }
+
+  post(
+    url,
+    data
+  ) {
+    return new Promise((resolve, reject) =&gt; {
+      axios.post(url, data).then(res =&gt; {
+        resolve(res.data)
+      }).catch(e =&gt; {
+        reject(e) 
+      })
+    })
+  }
+
+}
+
+
+export default new HttpClient()
+</code></pre>
+<h2 id="_3">Скриншоты страниц приложения</h2>
+<p>Страница регистрации
+<img alt="" src="pictures/register.png" />
+Страница логина
+<img alt="" src="pictures/login.png" />
+Домашняя страница
+<img alt="" src="pictures/home.png" />
+Страница поиска
+<img alt="" src="pictures/search.png" />
+Страница профиля
+<img alt="" src="pictures/profile.png" />
+<img alt="" src="pictures/profile2.png" /></p>
+<h2 id="_4">Заключение</h2>
+<p>В процессе лабораторной работы было создано клиентское приложения на vue.js, использующее реализованное
+в прошлой лабораторной работе API, для поиска и прослушиваня аудиодорожек,
+с возможностью регистрации, добавления дорожек в понравившиеся, составления плейлистов</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="js/jquery-3.6.0.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js"></script>
+        <script src="search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.5.3
+Build Date UTC : 2024-01-10 08:20:57.246513+00:00
+-->
