@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Реализация простого сайта средствами Django - My Docs</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">My Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href="../.." class="nav-link">l-4</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../l3/" class="nav-link">l-3</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../l2/" class="nav-link">l-2</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../../l3/" class="nav-link">l-1</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#django" class="nav-link">Реализация простого сайта средствами Django</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#_1" class="nav-link">Текст работы</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_2" class="nav-link">Модели</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#urlspy" class="nav-link">Маршруты приложения urls.py</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#viewspy" class="nav-link">Контроллеры приложения views.py</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#_3" class="nav-link">Обзор страниц</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="django">Реализация простого сайта средствами Django</h1>
+<p>Цель: овладеть практическими навыками и умениями реализации web-сервисов средствами Django.</p>
+<h2 id="_1">Текст работы</h2>
+<p>Доска домашних заданий.\
+О домашнем задании должна храниться следующая информация: предмет,
+преподаватель, дата выдачи, период выполнения, текст задания, информация о штрафах.
+Необходимо реализовать следующий функционал:</p>
+<ul>
+<li>Регистрация новых пользователей.</li>
+<li>Просмотр домашних заданий по всем дисциплинам (сроки выполнения,
+описание задания).</li>
+<li>Сдача домашних заданий в текстовом виде.</li>
+<li>Администратор (учитель) должен иметь возможность поставить оценку за
+задание средствами Django-admin.</li>
+<li>В клиентской части должна формироваться таблица, отображающая оценки
+всех учеников класса.</li>
+</ul>
+<h2 id="_2">Модели</h2>
+<pre><code>class User(AbstractUser):
+    is_teacher = models.BooleanField(default=False)
+
+
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class Homework(models.Model):
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    issue_date = models.DateField()
+    deadline = models.DateField()
+    description = models.TextField()
+    penalties = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f&quot;Домашнее задание по {self.subject.name}&quot;
+
+
+class HomeworkSubmission(models.Model):
+    student = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    homework = models.ForeignKey(Homework, on_delete=models.CASCADE)
+    submission_text = models.TextField()
+    submission_date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f&quot;Сдача задания '{self.homework}' от {self.student.username}&quot;
+
+
+class HomeworkGrade(models.Model):
+    homework_submission = models.OneToOneField(HomeworkSubmission, on_delete=models.CASCADE)
+    grade = models.PositiveIntegerField()
+    graded_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    graded_date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f&quot;Оценка за сдачу '{self.homework_submission.homework}' от {self.homework_submission.student.username}&quot;
+
+</code></pre>
+<p>Была переопределена стандартная модель пользователя. К ней был добавлен флаг для определения роли пользователя. По умолчанию при регистрации пользователю присваивается роль ученика. Для того, чтобы создать нового учителя, необходимо воспользоваться средствами django-admin.</p>
+<h2 id="urlspy">Маршруты приложения <code>urls.py</code></h2>
+<pre><code>from django.urls import path
+from django.contrib.auth.views import LogoutView
+from . import views
+
+
+urlpatterns = [
+    #  Student
+    path('', views.home, name='home'),
+    path('homeworks/&lt;int:subject_id&gt;', views.index_homeworks, name='homeworks.index'),
+    path('homeworks/show/&lt;int:hw_id&gt;', views.show_homeworks, name='homeworks.show'),
+    path('submissions/', views.store_submission, name='submissions.store'),
+
+    #  Teacher
+    path('journal', views.journal, name='journal'),
+    path('submissions/&lt;int:s_id&gt;', views.show_submission, name='submissions.show'),
+    path('grades', views.store_grade, name='grades.store'),
+
+    #  Auth
+    path('register/', views.register, name='register'),
+    path('login/', views.user_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
+]
+</code></pre>
+<p>Маршруты разбиты по логическим группам: маршруты для аутентификации, маршруты для студента и учителя.</p>
+<h2 id="viewspy">Контроллеры приложения <code>views.py</code></h2>
+<p>К маршрутам были добавлены соответствующие декораторы для проверки аутентификации. Не аутентифицированные пользователи могут
+просматривать только страницы логина и регистрации, аутентифицированные, напротив - их просматривать не могут. 
+Также в маршрутах, которые могут просматриваться только учителями, такие как журнал и выставление оценок, 
+стоит проверка на роль пользователя.</p>
+<pre><code>from homeworks.forms import RegisterForm, LoginForm
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from functools import wraps
+from django.db.models.functions import ExtractDay
+
+from homeworks.models import Subject, Homework, HomeworkSubmission, User, HomeworkGrade
+
+
+def anonymous_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        else:
+            return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+# AUTH
+@anonymous_required
+def register(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+
+        if form.is_valid():
+            new_user = form.save(commit=False)
+            new_user.is_teacher = False
+            new_user.save()
+            return redirect('login')
+    else:
+        form = RegisterForm()
+    return render(request, 'auth/register.html', {'form': form})
+
+
+@anonymous_required
+def user_login(request):
+    if request.method == 'POST':
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = LoginForm()
+    return render(request, 'auth/login.html', {'form': form})
+
+
+@login_required
+def user_logout(request):
+    logout(request)
+
+    return redirect('login')
+#  System
+
+
+def handler404(request, exception):
+    return render(request, 'system/404.html', status=404)
+
+
+#  Student
+@login_required
+def home(request):
+    subjects = Subject.objects.all()
+
+    return render(request, 'home.html', {
+        'subjects': subjects,
+    })
+
+
+@login_required
+def index_homeworks(request, subject_id):
+    subject = Subject.objects.get(pk=subject_id)
+    homeworks = Homework.objects.filter(subject_id=subject_id).all()
+
+    return render(request, 'student/homeworks.index.html', {
+        'subject': subject.name,
+        'homeworks': homeworks,
+    })
+
+
+@login_required
+def show_homeworks(request, hw_id):
+    homework = Homework.objects.get(pk=hw_id)
+
+    try:
+        submission = HomeworkSubmission.objects.filter(student_id=request.user.id, homework_id=hw_id).get()
+    except ObjectDoesNotExist:
+        submission = None
+
+    return render(request, 'student/homeworks.show.html', {
+        'homework': homework,
+        'submission': submission.submission_text if submission else None,
+        'is_submitted': submission is not None,
+    })
+
+
+@login_required
+def store_submission(request):
+    data = request.POST
+
+    submission = HomeworkSubmission(
+        submission_text=data['submission_text'],
+        homework_id=data['homework_id'],
+        student_id=request.user.id,
+        submission_date=timezone.now()
+    )
+
+    submission.save()
+
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+#  Teacher
+@login_required
+def journal(request):
+    if not request.user.is_teacher:
+        return redirect('home')
+
+    students = User.objects.filter(is_teacher=False).all()
+    subjects = Subject.objects.all()
+
+    for subject in subjects:
+        subject.homeworks = subject.homework_set.all()
+
+    for student in students:
+        student.grades = {}
+        for subject in subjects:
+            grades = []
+            for homework in subject.homeworks:
+                try:
+                    submission = HomeworkSubmission.objects.get(student_id=student.id, homework_id=homework.id)
+
+                    try:
+                        grades.append({'id': submission.id, 'value': submission.homeworkgrade.grade})
+                    except ObjectDoesNotExist:
+                        grades.append({'id': submission.id, 'value': 'Не оценено'})
+                except ObjectDoesNotExist:
+                    grades.append({'id': None, 'value': 'Не сдано'})
+            student.grades[subject.id] = grades
+
+    return render(request, 'teacher/journal.html', {
+        'students': students,
+        'subjects': subjects,
+    })
+
+
+@login_required
+def show_submission(request, s_id):
+    if not request.user.is_teacher:
+        return redirect('home')
+
+    try:
+        submission = HomeworkSubmission.objects.get(pk=s_id)
+    except ObjectDoesNotExist:
+        return redirect(request.META.get('HTTP_REFERER'))
+
+    return render(request, 'teacher/submissions.show.html', {
+        'submission': submission,
+    })
+
+
+@login_required
+def store_grade(request):
+    if not request.user.is_teacher:
+        return redirect('home')
+
+    data = request.POST
+
+    submission = HomeworkSubmission.objects.get(pk=data['submission_id'])
+
+    if submission.submission_date &gt; submission.homework.deadline:
+        from datetime import datetime
+
+        d1 = datetime.strptime(str(submission.submission_date), &quot;%Y-%m-%d&quot;)
+        d2 = datetime.strptime(str(submission.homework.deadline), &quot;%Y-%m-%d&quot;)
+        days_overdue = (d1 - d2).days
+
+        penalty = submission.homework.penalties * days_overdue
+
+    else:
+        penalty = 0
+
+    grade = round(int(data['grade']) - penalty)
+
+    homework_grade = HomeworkGrade(
+        homework_submission_id=data['submission_id'],
+        grade=grade,
+        graded_by=request.user,
+        graded_date=timezone.now(),
+    )
+
+    homework_grade.save()
+
+    return redirect(request.META.get('HTTP_REFERER'))
+
+</code></pre>
+<h2 id="_3">Обзор страниц</h2>
+<h3 id="_4">Регистрация новых пользователей</h3>
+<p>Ученики могут зарегистрироваться на сайте.</p>
+<p><img alt="Скриншот страницы регистрации" src="./pictures/register.png" /></p>
+<h3 id="_5">Аутентификация пользователей</h3>
+<p>Страница входа на сайт.</p>
+<p><img alt="Скриншот страницы регистрации" src="./pictures/login.png" /></p>
+<h3 id="_6">Домашняя страница</h3>
+<p>На домашней странице выведены все предметы.</p>
+<p><img alt="Скриншот страницы регистрации" src="./pictures/homepage.png" /></p>
+<h3 id="_7">Просмотр домашних заданий</h3>
+<p>На сайте ученики могут просматривать список домашних заданий по всем дисциплинам. Для каждого задания отображается срок выполнения и описание.</p>
+<p><img alt="Скриншот страницы просмотра домашних заданий" src="./pictures/show_homeworks.png" /></p>
+<h3 id="_8">Сдача домашних заданий</h3>
+<p>Ученики могут сдавать домашние задания, предоставляя текстовое описание выполненной работы.</p>
+<p><img alt="Скриншот страницы сдачи домашних заданий" src="./pictures/show_homework.png" /></p>
+<h3 id="_9">Оценка заданий</h3>
+<p>Администратор (учитель) может оценивать задания.</p>
+<p><img alt="Скриншот панели администратора Django" src="./pictures/show_submission.png" />
+Оцененное задание:
+<img alt="Скриншот панели администратора Django" src="./pictures/submission_graded.png" /></p>
+<h3 id="_10">Отображение оценок учеников</h3>
+<p>В клиентской части сайта формируется таблица, отображающая оценки всех учеников класса.</p>
+<p><img alt="Скриншот страницы с оценками учеников" src="./pictures/journal.png" /></p>
+<h3 id="_11">Заключение</h3>
+<p>В процессе лабораторной работы был создан веб-сайт для выдачи, сдачи и оценки домашних заданий</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/jquery-3.6.0.min.js"></script>
+        <script src="../../js/bootstrap.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
